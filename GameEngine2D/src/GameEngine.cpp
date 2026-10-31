@@ -431,8 +431,9 @@ bool GameEngine::init() {
         fprintf(stderr, "GLFW init failed\n");
         return false;
     }
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     mWindow = glfwCreateWindow(1280, 720, "NEON OUTPOST - DMET502 Project 1", nullptr, nullptr);
     if (!mWindow) {
@@ -583,4 +584,3 @@ void GameEngine::run() {
         glfwSwapBuffers(mWindow);
     }
 }
-
