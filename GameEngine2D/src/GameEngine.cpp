@@ -119,11 +119,11 @@ public:
         delete mXenoLower; mXenoLower = nullptr;
     }
     void update(GameEngine& e, float dt, const InputState& in) override {
-        (void)in;
         mTimer += dt;
         mGuardian->walkPhase += dt;
         mXenoUpper->walkPhase += dt;
         mXenoLower->walkPhase += dt;
+        if (mTimer >= 2.0f && in.skipPressed) e.switchTo(AppStateId::Gameplay); // FSM §5.2: skip key entry
         if (mTimer >= Config::CUTSCENE_DURATION) e.switchTo(AppStateId::Gameplay);
     }
     void draw(GameEngine& e, Renderer2D& r) override {
@@ -617,8 +617,8 @@ void GameEngine::run() {
         mRenderer.setGrayscale(0.0f);
         mRenderer.clearFrame(0.07f, 0.08f, 0.11f);
         mRenderer.beginFrame(mOrtho);
-        if (p2Border) drawBorderTestQuads(mRenderer);
         mActive->draw(*this, mRenderer);
+        if (p2Border) drawBorderTestQuads(mRenderer);
         mRenderer.endFrame();
         if (p2Fps) checkGLError("frame-end");
         glfwSwapBuffers(mWindow);

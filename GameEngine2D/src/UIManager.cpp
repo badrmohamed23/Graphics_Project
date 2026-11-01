@@ -47,7 +47,6 @@ static void cardMiniModel(Renderer2D& r, float cx, float cy, PlayerKind k, float
 }
 
 void uiDrawCard(Renderer2D& r, int index, bool unlocked, bool selected, bool hovered, float time) {
-    float scaleFactor = 1.0f;
     UIRect rc = uiCardRect(index);
     r.pushQuadTL(rc.x, rc.y, rc.w, rc.h, Vec3(0.09f, 0.11f, 0.16f));
     if (selected) r.pushRectOutline(rc.x, rc.y, rc.w, rc.h, 3.0f, Vec3(0.2f, 1.0f, 0.8f));
@@ -57,7 +56,6 @@ void uiDrawCard(Renderer2D& r, int index, bool unlocked, bool selected, bool hov
     Vec3 tintGlow(0.35f, 1.0f, 0.9f);
     Vec3 dark(0.2f, 0.22f, 0.28f);
     Vec3 fg = unlocked ? tintGlow * 1.2f : Vec3(0.42f, 0.44f, 0.5f);
-    (void)scaleFactor;
 
     cardMiniModel(r, rc.x + 30.0f, rc.cy(), uiCardKind(index), time);
 

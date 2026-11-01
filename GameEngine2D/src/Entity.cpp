@@ -115,8 +115,7 @@ void EnemyEntity::update(float dt, SimEvents& ev) {
 static void drawHealthBar(Renderer2D& r, float x, float topY, int hp, int maxHp) {
     float w = 44.0f, h = 6.0f;
     float frac = maxHp > 0 ? (float)hp / (float)maxHp : 0.0f;
-    float yy = topY > 0.0f ? topY : topY;
-    r.pushBar(x - w * 0.5f, yy, w, h, frac, Vec3(0.15f, 0.85f, 0.25f), Vec3(0.05f, 0.05f, 0.08f));
+    r.pushBar(x - w * 0.5f, topY, w, h, frac, Vec3(0.15f, 0.85f, 0.25f), Vec3(0.05f, 0.05f, 0.08f));
 }
 
 void PlayerEntity::drawMelee(Renderer2D& r, float yc, float j, float time) const {
