@@ -426,6 +426,23 @@ public:
 };
 
 } // anonymous namespace
+
+static gl::GLenum checkGLError(const char* where) {
+    gl::GLenum err = gl::glGetError();
+    if (err != 0) fprintf(stderr, "GL error 0x%04X at %s\n", (unsigned)err, where);
+    return err;
+}
+
+static void drawBorderTestQuads(Renderer2D& r) {
+    static bool announced = false;
+    if (!announced) { printf("[P2] border-quad verification active (NEON_P2_BORDER)\n"); announced = true; }
+    const Vec3 c(1.0f, 0.0f, 0.0f);
+    r.pushQuad(640.0f, 0.5f, 1280.0f, 1.0f, c);
+    r.pushQuad(640.0f, 719.5f, 1280.0f, 1.0f, c);
+    r.pushQuad(0.5f, 360.0f, 1.0f, 720.0f, c);
+    r.pushQuad(1279.5f, 360.0f, 1.0f, 720.0f, c);
+}
+
 bool GameEngine::init() {
     if (!glfwInit()) {
         fprintf(stderr, "GLFW init failed\n");
@@ -456,14 +473,31 @@ bool GameEngine::init() {
         fprintf(stderr, "OpenGL 3.3 Core not available\n");
         return false;
     }
-    { const unsigned char* vs = (const unsigned char*)gl::glGetString(0x1F00); printf("VL="); for (int i = 0; i < 24 && vs[i]; ++i) printf("%02X", vs[i]); printf("\n"); }
-    printf("GL_RENDERER: %s\n", (const char*)gl::glGetString(0x1F01));
+    {
+        const char* vs = (const char*)gl::glGetString(0x1F00);
+        const char* rs = (const char*)gl::glGetString(0x1F01);
+        printf("GL_VERSION: %s\n", vs ? vs : "?");
+        printf("GL_RENDERER: %s\n", rs ? rs : "?");
+        int verMajor = 0, verMinor = 0;
+        if (vs) {
+            const char* digitStart = vs;
+            while (*digitStart && (*digitStart < '0' || *digitStart > '9')) ++digitStart;
+            sscanf(digitStart, "%d.%d", &verMajor, &verMinor);
+        }
+        if (verMajor == 0 && verMinor == 0) {
+            printf("GL_VERSION unparsable ('%s'); continuing — all pipeline entry points resolved\n", vs ? vs : "(null)");
+        } else if (verMajor < 3 || (verMajor == 3 && verMinor < 3)) {
+            fprintf(stderr, "OpenGL 3.3 Core context not available (raw GL_VERSION: '%s')\n", vs ? vs : "(null)");
+            return false;
+        }
+    }
     int attribs[5];
     glfwGetFramebufferSize(mWindow, &attribs[0], &attribs[1]);
     (void)attribs;
     gl::glViewport(0, 0, 1280, 720);
     gl::glEnable(GL_BLEND);
     gl::glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    checkGLError("post-context-setup");
 
     if (!mRenderer.init()) {
         fprintf(stderr, "Renderer init failed\n");
@@ -551,6 +585,10 @@ InputState GameEngine::pollInput() {
 
 void GameEngine::run() {
     double prevTime = glfwGetTime();
+    const bool p2Border = getenv("NEON_P2_BORDER") != nullptr;
+    const bool p2Fps = getenv("NEON_P2_DEBUG") != nullptr;
+    int fpsFrames = 0;
+    double fpsWindowStart = prevTime;
     while (mWindow && !glfwWindowShouldClose(mWindow)) {
         glfwPollEvents();
         double now = glfwGetTime();
@@ -579,8 +617,21 @@ void GameEngine::run() {
         mRenderer.setGrayscale(0.0f);
         mRenderer.clearFrame(0.07f, 0.08f, 0.11f);
         mRenderer.beginFrame(mOrtho);
+        if (p2Border) drawBorderTestQuads(mRenderer);
         mActive->draw(*this, mRenderer);
         mRenderer.endFrame();
+        if (p2Fps) checkGLError("frame-end");
         glfwSwapBuffers(mWindow);
+        if (p2Fps) {
+            ++fpsFrames;
+            double elapsed = now - fpsWindowStart;
+            if (elapsed >= 1.0) {
+                char title[80];
+                snprintf(title, sizeof(title), "NEON OUTPOST - DMET502 Project 1  [P2 %d fps]", (int)((double)fpsFrames / elapsed));
+                glfwSetWindowTitle(mWindow, title);
+                fpsFrames = 0;
+                fpsWindowStart = now;
+            }
+        }
     }
 }

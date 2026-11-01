@@ -144,7 +144,7 @@ void Renderer2D::pushText(float x, float y, float scale, const std::string& text
         for (int py = 0; py < 8; ++py) {
             for (int px = 0; px < 8; ++px) {
                 if (glyph[py] & (1 << px)) {
-                    pushQuadTL(cx + px * scale, y + py * scale, scale, scale, color);
+                    pushQuadTL(cx + px * scale, y + (7 - py) * scale, scale, scale, color);
                 }
             }
         }
@@ -157,4 +157,3 @@ void Renderer2D::pushBar(float x, float y, float w, float h, float fraction, con
     float fw = w * (fraction < 0.0f ? 0.0f : (fraction > 1.0f ? 1.0f : fraction));
     if (fw > 0.5f) pushQuadTL(x, y, fw, h, fg);
 }
-
