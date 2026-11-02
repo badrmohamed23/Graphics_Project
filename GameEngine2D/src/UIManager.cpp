@@ -3,7 +3,7 @@
 #include <cmath>
 
 UIRect uiCardRect(int index) {
-    return UIRect{ 40.0f + index * 150.0f, 652.0f, 130.0f, 62.0f };
+    return UIRect{ 40.0f + index * 200.0f, 652.0f, 180.0f, 62.0f };
 }
 
 PlayerKind uiCardKind(int index) {
@@ -26,23 +26,24 @@ int uiHoveredCard(float mx, float my) {
 }
 
 static void cardMiniModel(Renderer2D& r, float cx, float cy, PlayerKind k, float time) {
+    const float s = 1.5f;
     if (k == PlayerKind::Melee) {
-        r.pushQuad(cx - 3.0f, cy - 6.0f, 10.0f, 18.0f, Vec3(0.25f, 0.5f, 0.8f));
-        r.pushQuad(cx - 3.0f, cy + 8.0f, 7.0f, 7.0f, Vec3(0.16f, 0.33f, 0.55f));
-        r.pushQuad(cx + 2.0f, cy + 9.0f, 4.0f, 3.0f, Vec3(0.0f, 1.0f, 1.0f));
-        r.pushQuad(cx + 4.0f, cy - 3.0f, 8.0f, 4.0f, Vec3(0.75f, 0.8f, 0.85f));
-        r.pushQuad(cx - 9.0f, cy - 6.0f, 4.0f, 10.0f, Vec3(0.55f, 0.6f, 0.7f));
+        r.pushQuad(cx - 4.5f, cy - 9.0f, 15.0f, 27.0f, Vec3(0.25f, 0.5f, 0.8f));
+        r.pushQuad(cx - 4.5f, cy + 12.0f, 10.5f, 10.5f, Vec3(0.16f, 0.33f, 0.55f));
+        r.pushQuad(cx + 3.0f, cy + 13.5f, 6.0f, 4.5f, Vec3(0.0f, 1.0f, 1.0f));
+        r.pushQuad(cx + 6.0f, cy - 4.5f, 12.0f, 6.0f, Vec3(0.75f, 0.8f, 0.85f));
+        r.pushQuad(cx - 13.5f, cy - 9.0f, 6.0f, 15.0f, Vec3(0.55f, 0.6f, 0.7f));
     } else if (k == PlayerKind::Ranged) {
-        r.pushQuad(cx - 3.0f, cy - 6.0f, 8.0f, 17.0f, Vec3(0.35f, 0.62f, 0.68f));
-        r.pushQuad(cx - 3.0f, cy + 7.0f, 6.0f, 6.0f, Vec3(0.22f, 0.42f, 0.5f));
-        r.pushQuad(cx + 2.0f, cy + 8.0f, 4.0f, 3.0f, Vec3(0.55f, 1.0f, 0.85f));
-        r.pushQuad(cx + 3.0f, cy - 2.0f, 13.0f, 3.0f, Vec3(0.55f, 0.6f, 0.68f));
-        r.pushQuad(cx + 14.0f, cy - 3.0f, 4.0f, 4.0f, Vec3(0.15f, 0.2f, 0.25f));
+        r.pushQuad(cx - 4.5f, cy - 9.0f, 12.0f, 25.5f, Vec3(0.35f, 0.62f, 0.68f));
+        r.pushQuad(cx - 4.5f, cy + 10.5f, 9.0f, 9.0f, Vec3(0.22f, 0.42f, 0.5f));
+        r.pushQuad(cx + 3.0f, cy + 12.0f, 6.0f, 4.5f, Vec3(0.55f, 1.0f, 0.85f));
+        r.pushQuad(cx + 4.5f, cy - 3.0f, 19.5f, 4.5f, Vec3(0.55f, 0.6f, 0.68f));
+        r.pushQuad(cx + 21.0f, cy - 4.5f, 6.0f, 6.0f, Vec3(0.15f, 0.2f, 0.25f));
     } else {
-        r.pushQuad(cx - 4.0f, cy - 5.0f, 14.0f, 18.0f, Vec3(0.45f, 0.42f, 0.3f));
-        r.pushQuad(cx - 4.0f, cy - 9.0f, 14.0f, 5.0f, Vec3(0.3f, 0.28f, 0.2f));
-        r.pushQuad(cx + 3.0f, cy - 2.0f, 4.0f, 4.0f, Vec3(1.0f, 0.9f, 0.4f));
-        r.pushQuad(cx + 10.0f, cy - 1.0f, 3.0f, 12.0f + 2.0f * sinf(time * 4.0f), Vec3(0.2f, 0.85f, 0.55f));
+        r.pushQuad(cx - 6.0f, cy - 7.5f, 21.0f, 27.0f, Vec3(0.45f, 0.42f, 0.3f));
+        r.pushQuad(cx - 6.0f, cy - 13.5f, 21.0f, 7.5f, Vec3(0.3f, 0.28f, 0.2f));
+        r.pushQuad(cx + 4.5f, cy - 3.0f, 6.0f, 6.0f, Vec3(1.0f, 0.9f, 0.4f));
+        r.pushQuad(cx + 15.0f, cy - 1.5f, 4.5f, (12.0f + 2.0f * sinf(time * 4.0f)) * s, Vec3(0.2f, 0.85f, 0.55f));
     }
 }
 
@@ -63,10 +64,10 @@ void uiDrawCard(Renderer2D& r, int index, bool unlocked, bool selected, bool hov
     PlayerKind k = uiCardKind(index);
     const char* nameL = k == PlayerKind::Melee ? "MELEE" : (k == PlayerKind::Ranged ? "RANGED" : "DEFENSE");
     snprintf(label, 24, "%s", nameL);
-    r.pushText(rc.x + 60.0f, rc.y + 16.0f, 2.0f, label, unlocked ? Vec3(0.5f, 0.9f, 0.85f) : Vec3(0.4f, 0.42f, 0.48f));
+    r.pushText(rc.x + 58.0f, rc.y + 16.0f, 2.0f, label, unlocked ? Vec3(0.5f, 0.9f, 0.85f) : Vec3(0.4f, 0.42f, 0.48f));
     char cost[24];
     snprintf(cost, 24, "%d COINS", WalletManager::cardCost(k));
-    r.pushText(rc.x + 60.0f, rc.y + 38.0f, 2.0f, cost, unlocked ? Vec3(1.0f, 0.85f, 0.3f) : Vec3(0.45f, 0.42f, 0.38f));
+    r.pushText(rc.x + 58.0f, rc.y + 38.0f, 1.5f, cost, unlocked ? Vec3(1.0f, 0.85f, 0.3f) : Vec3(0.45f, 0.42f, 0.38f));
 }
 
 void uiDrawToolbar(Renderer2D& r, WalletManager& wallet, int waveDisplay, float time, float mx, float my, int selectedCardIndex) {

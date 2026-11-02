@@ -19,13 +19,13 @@
 #include <vector>
 
 namespace {
-UIRect BTN_START = { 520.0f, 300.0f, 240.0f, 56.0f };
-UIRect BTN_SOUND = { 520.0f, 380.0f, 240.0f, 56.0f };
-UIRect BTN_EXIT = { 520.0f, 460.0f, 240.0f, 56.0f };
+UIRect BTN_START = { 490.0f, 460.0f, 300.0f, 56.0f };
+UIRect BTN_SOUND = { 490.0f, 380.0f, 300.0f, 56.0f };
+UIRect BTN_EXIT = { 490.0f, 300.0f, 300.0f, 56.0f };
 UIRect BTN_BACK = { 520.0f, 470.0f, 240.0f, 56.0f };
-UIRect BTN_MUTE = { 480.0f, 390.0f, 160.0f, 56.0f };
-UIRect BTN_VOLUP = { 680.0f, 330.0f, 100.0f, 56.0f };
-UIRect BTN_VOLDOWN = { 500.0f, 330.0f, 100.0f, 56.0f };
+UIRect BTN_MUTE = { 570.0f, 390.0f, 140.0f, 56.0f };
+UIRect BTN_VOLUP = { 670.0f, 310.0f, 120.0f, 56.0f };
+UIRect BTN_VOLDOWN = { 490.0f, 310.0f, 120.0f, 56.0f };
 UIRect BTN_RESUME = { 520.0f, 320.0f, 240.0f, 56.0f };
 UIRect BTN_RESTART = { 520.0f, 400.0f, 240.0f, 56.0f };
 UIRect BTN_TOMAIN = { 520.0f, 480.0f, 240.0f, 56.0f };
@@ -60,13 +60,13 @@ public:
         float t = e.gameTime();
         const InputState& in = e.lastInput;
         uiDrawEnvironment(r, t);
-        drawTitleBanner(r, "NEON OUTPOST", 130.0f);
-        drawSubText(r, "DMET 502 COMPUTER GRAPHICS - WINTER 2026", 235.0f, 2.5f, Vec3(0.5f, 0.55f, 0.6f));
-        drawSubText(r, "DEFEND THE REACTOR CORE FROM THE XENO SWARM", 262.0f, 2.2f, Vec3(0.35f, 0.75f, 0.7f));
+        drawTitleBanner(r, "NEON OUTPOST", 630.0f);
+        drawSubText(r, "DMET 502 COMPUTER GRAPHICS - WINTER 2026", 560.0f, 2.5f, Vec3(0.5f, 0.55f, 0.6f));
+        drawSubText(r, "DEFEND THE REACTOR CORE FROM THE XENO SWARM", 520.0f, 2.2f, Vec3(0.35f, 0.75f, 0.7f));
         uiDrawButton(r, BTN_START, "START GAME", BTN_START.contains(in.mouseX, in.mouseY), Vec3(0.08f, 0.28f, 0.26f));
         uiDrawButton(r, BTN_SOUND, "SOUND SETTINGS", BTN_SOUND.contains(in.mouseX, in.mouseY), Vec3(0.08f, 0.28f, 0.26f));
         uiDrawButton(r, BTN_EXIT, "EXIT", BTN_EXIT.contains(in.mouseX, in.mouseY), Vec3(0.08f, 0.28f, 0.26f));
-        drawSubText(r, "GUARD THE LAST REACTOR OF LAB X-42", 560.0f, 2.0f, Vec3(0.3f, 0.6f, 0.55f));
+        drawSubText(r, "GUARD THE LAST REACTOR OF LAB X-42", 180.0f, 2.0f, Vec3(0.3f, 0.6f, 0.55f));
     }
 };
 
@@ -86,17 +86,17 @@ public:
     }
     void draw(GameEngine& e, Renderer2D& r) override {
         const InputState& in = e.lastInput;
-        uiDrawEnvironment(r, e.gameTime());
-        drawTitleBanner(r, "SOUND SETTINGS", 140.0f);
-        drawSubText(r, "MASTER VOLUME", 300.0f, 3.0f, Vec3(0.6f, 0.65f, 0.7f));
-        r.pushBar(BTN_VOLDOWN.x + BTN_VOLDOWN.w + 10.0f, BTN_VOLDOWN.y + 12.0f, 70.0f, 32.0f, e.audio.volume(), Vec3(0.2f, 0.9f, 0.7f), Vec3(0.1f, 0.12f, 0.18f));
-        uiDrawButton(r, BTN_VOLUP, "VOL+", BTN_VOLUP.contains(in.mouseX, in.mouseY), Vec3(0.08f, 0.28f, 0.26f));
-        uiDrawButton(r, BTN_VOLDOWN, "VOL-", BTN_VOLDOWN.contains(in.mouseX, in.mouseY), Vec3(0.08f, 0.28f, 0.26f));
         char volLabel[32];
-        snprintf(volLabel, 32, "%s", e.audio.isMuted() ? "UNMUTE" : "MUTE");
-        uiDrawButton(r, BTN_MUTE, volLabel, BTN_MUTE.contains(in.mouseX, in.mouseY), Vec3(0.08f, 0.28f, 0.26f));
+        (void)snprintf(volLabel, 32, "%s", e.audio.isMuted() ? "UNMUTE" : "MUTE");
+        uiDrawEnvironment(r, e.gameTime());
+        drawTitleBanner(r, "SOUND SETTINGS", 630.0f);
         uiDrawButton(r, BTN_BACK, "BACK", BTN_BACK.contains(in.mouseX, in.mouseY), Vec3(0.08f, 0.28f, 0.26f));
-        drawSubText(r, "[+ / -] VOLUME   [M] MUTE", 560.0f, 2.2f, Vec3(0.35f, 0.6f, 0.55f));
+        uiDrawButton(r, BTN_MUTE, volLabel, BTN_MUTE.contains(in.mouseX, in.mouseY), Vec3(0.08f, 0.28f, 0.26f));
+        uiDrawButton(r, BTN_VOLDOWN, "VOL-", BTN_VOLDOWN.contains(in.mouseX, in.mouseY), Vec3(0.08f, 0.28f, 0.26f));
+        uiDrawButton(r, BTN_VOLUP, "VOL+", BTN_VOLUP.contains(in.mouseX, in.mouseY), Vec3(0.08f, 0.28f, 0.26f));
+        drawSubText(r, "MASTER VOLUME", 230.0f, 3.0f, Vec3(0.6f, 0.65f, 0.7f));
+        r.pushBar(440.0f, 170.0f, 400.0f, 40.0f, e.audio.volume(), Vec3(0.2f, 0.9f, 0.7f), Vec3(0.1f, 0.12f, 0.18f));
+        drawSubText(r, "[+ / -] VOLUME   [M] MUTE", 60.0f, 2.2f, Vec3(0.35f, 0.6f, 0.55f));
     }
 };
 
@@ -383,7 +383,7 @@ void GameplayState::draw(GameEngine& e, Renderer2D& r) {
     for (PlayerEntity* p : players) p->draw(r, t);
     drawCoins(r, t);
     uiDrawToolbar(r, wallet, spawner.waveIndex() + 1, t, in.mouseX, in.mouseY, selectedCard);
-    drawSubText(r, "CLICK A CARD, THEN A LANE TO DEPLOY", 628.0f, 1.8f, Vec3(0.35f, 0.65f, 0.6f));
+    drawSubText(r, "CLICK A CARD, THEN A LANE TO DEPLOY", 618.0f, 1.8f, Vec3(0.35f, 0.65f, 0.6f));
 }
 
 class PauseMenuState : public AppState {
