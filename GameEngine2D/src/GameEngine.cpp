@@ -269,6 +269,7 @@ void GameplayState::update(GameEngine& e, float dt, const InputState& in) {
     }
 
     if (in.clickPressed) {
+        fprintf(stderr, "[CLICK] game state path t=%.2f mx=%d my=%d card=%d\n", e.gameTime(), in.mouseX, in.mouseY, selectedCard);
         int hov = uiHoveredCard(in.mouseX, in.mouseY);
         if (hov >= 0) {
             PlayerKind k = uiCardKind(hov);
@@ -280,6 +281,7 @@ void GameplayState::update(GameEngine& e, float dt, const InputState& in) {
                 int cost = WalletManager::cardCost(k);
                 if (lane >= 0 && wallet.balance() >= cost) {
                     players.push_back(PlayerEntity::make(k, lane));
+                    fprintf(stderr, "[DEPLOY] t=%.2f kind=%d lane=%d\n", e.gameTime(), (int)k, lane);
                     wallet.spend(cost);
                     ev.emitSound(Sfx::Place);
                     selectedCard = -1;

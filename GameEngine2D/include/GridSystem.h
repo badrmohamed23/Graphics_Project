@@ -23,7 +23,7 @@ public:
     int hoveredLane() const { return mHoveredLane; }
     bool hovered() const { return mHoveredLane >= 0; }
     bool inBattleground(float x, float y) const {
-        return x >= 0.0f && x <= Config::WORLD_W && y >= Config::LANE_Y_MIN[0] && y <= Config::LANE_Y_MIN[0] + Config::LANE_COUNT * Config::LANE_HEIGHT;
+        return x >= 0.0f && x <= Config::WORLD_W && y >= Config::LANE_Y_MIN[0] && y <= Config::LANE_Y_MIN[Config::LANE_COUNT - 1] + Config::LANE_HEIGHT;
     }
     void draw(Renderer2D& r, float time) const;
 
