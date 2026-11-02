@@ -1,0 +1,3 @@
+C:/Users/BadrElDeen Mohamed/OneDrive/Desktop/Graphics_Project/GameEngine2D/build-gate/CMakeFiles/Game.dir
+C:/Users/BadrElDeen Mohamed/OneDrive/Desktop/Graphics_Project/GameEngine2D/build-gate/CMakeFiles/edit_cache.dir
+C:/Users/BadrElDeen Mohamed/OneDrive/Desktop/Graphics_Project/GameEngine2D/build-gate/CMakeFiles/rebuild_cache.dir
