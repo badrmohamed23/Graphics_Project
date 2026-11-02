@@ -23,8 +23,7 @@ constexpr float X_PLAYER_SPAWN = 170.0f;
 constexpr float X_ENEMY_SPAWN = 1260.0f;
 constexpr float X_PLAYER_CAP = 1270.0f;
 
-constexpr float SPEED_MELEE = 40.0f;
-constexpr float SPEED_RANGED = 40.0f;
+constexpr float SPEED_MARCH = 40.0f;
 constexpr float SPEED_DEFENSE = 0.0f;
 constexpr float SPEED_EASY = 35.0f;
 constexpr float SPEED_MEDIUM = 35.0f;
@@ -42,7 +41,7 @@ constexpr float DUCK_HEIGHT_FACTOR = 0.5f;
 
 constexpr float ENTITY_HALF_W = 30.0f;
 constexpr float ENTITY_HALF_H = 45.0f;
-constexpr float DUCK_TOP_OFFSET = 10.0f;
+constexpr float DUCK_TOP_OFFSET = 8.0f;
 
 constexpr float LOW_PROJ_Y_MAX = 0.0f;
 constexpr float HIGH_PROJ_Y_MIN = 10.0f;

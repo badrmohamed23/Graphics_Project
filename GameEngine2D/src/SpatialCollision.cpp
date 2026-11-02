@@ -3,6 +3,7 @@
 void SpatialCollision::resolve(std::vector<PlayerEntity*>& players, std::vector<EnemyEntity*>& enemies,
                               std::vector<Projectile>& projectiles, std::vector<Coin>& coins,
                               SimEvents& ev, bool& homeBreached) {
+    for (PlayerEntity* p : players) p->engaged = false;
     for (EnemyEntity* e : enemies) {
         if (!e->alive) continue;
         e->engaged = false;
@@ -14,6 +15,7 @@ void SpatialCollision::resolve(std::vector<PlayerEntity*>& players, std::vector<
             if (p->lane != e->lane) continue;
             AABB pb = p->box();
             if (!eb.overlaps(pb)) continue;
+            p->engaged = true;
             if (!best || p->x > best->x) best = p;
         }
         if (best) {
@@ -35,7 +37,11 @@ void SpatialCollision::resolve(std::vector<PlayerEntity*>& players, std::vector<
                 if (!pb.overlaps(e->box())) continue;
                 if (!target || e->x < target->x) target = e;
             }
-            if (target) target->takeDamage(1);
+            if (target) {
+                target->takeDamage(1);
+                p->cdTimer = Config::ATTACK_COOLDOWN;
+                ev.emitSound(Sfx::Attack);
+            }
         }
     }
 

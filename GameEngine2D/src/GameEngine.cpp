@@ -290,6 +290,17 @@ void GameplayState::update(GameEngine& e, float dt, const InputState& in) {
         }
     }
 
+    for (PlayerEntity* p : players) {
+        if (p->kind != PlayerKind::Ranged) continue;
+        p->aimTarget = false;
+        for (EnemyEntity* en : enemies) {
+            if (en->alive && en->lane == p->lane && en->x > p->x && en->x - p->x <= Config::RANGED_RANGE) {
+                p->aimTarget = true;
+                break;
+            }
+        }
+    }
+
     for (PlayerEntity* p : players) p->update(dt, ev);
     for (EnemyEntity* en : enemies) en->update(dt, ev);
     for (Projectile& proj : projectiles) proj.update(dt);

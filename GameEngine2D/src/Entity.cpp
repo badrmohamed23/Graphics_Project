@@ -43,14 +43,11 @@ void PlayerEntity::update(float dt, SimEvents& ev) {
     }
     bool blockedEngage = engaged;
     if (!blockedEngage) {
-        x += Config::SPEED_RANGED * dt;
+        x += Config::SPEED_MARCH * dt;
         walkPhase += dt;
     }
-    if (kind == PlayerKind::Ranged && cdTimer <= 0.0f) {
+    if (kind == PlayerKind::Ranged && aimTarget && cdTimer <= 0.0f) {
         ev.emitProjectile(x + halfW + 12.0f, lane, 1.0f, 0.0f, Config::PROJECTILE_HALF_H, damage, false);
-        ev.emitSound(Sfx::Attack);
-        cdTimer = Config::ATTACK_COOLDOWN;
-    } else if (kind == PlayerKind::Melee && cdTimer <= 0.0f) {
         ev.emitSound(Sfx::Attack);
         cdTimer = Config::ATTACK_COOLDOWN;
     }

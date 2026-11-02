@@ -121,6 +121,7 @@ public:
     EvadeState evade = EvadeState::None;
     bool duckHeld = false;
     float jumpT = 0.0f;
+    bool aimTarget = false;
 
     float yOffset() const override {
         if (evade != EvadeState::Jump) return 0.0f;
