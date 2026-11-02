@@ -39,7 +39,7 @@ void SpatialCollision::resolve(std::vector<PlayerEntity*>& players, std::vector<
             }
             if (target) {
                 target->takeDamage(1);
-                p->cdTimer = Config::ATTACK_COOLDOWN;
+                p->cdTimer = Config::ATTACK_COOLDOWN_MELEE;
                 ev.emitSound(Sfx::Attack);
             }
         }

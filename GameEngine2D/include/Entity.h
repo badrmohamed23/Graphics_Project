@@ -157,6 +157,7 @@ public:
     EnemyKind kind = EnemyKind::Easy;
     float speed = Config::SPEED_EASY;
     Entity* strikeTarget = nullptr;
+    bool gunTarget = false;
 
     void update(float dt, SimEvents& ev) override;
     void draw(Renderer2D& r, float time) const override;

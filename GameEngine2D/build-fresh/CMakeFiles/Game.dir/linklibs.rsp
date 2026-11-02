@@ -1,0 +1,1 @@
+ ../third_party/glfw-3.3.8.bin.WIN32/lib-mingw/libglfw3dll.a -lopengl32 -lgdi32 -luser32 -lshell32 -lwinmm -lpsapi -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 

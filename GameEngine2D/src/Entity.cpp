@@ -93,11 +93,11 @@ void EnemyEntity::update(float dt, SimEvents& ev) {
         walkPhase += dt;
     }
     if (cdTimer <= 0.0f) {
-        if (kind == EnemyKind::Easy) {
+        if (kind == EnemyKind::Easy && gunTarget) {
             ev.emitProjectile(x - halfW - 12.0f, lane, -1.0f, 30.0f, 20.0f, 1, true);
             ev.emitSound(Sfx::Attack);
             cdTimer = Config::ATTACK_COOLDOWN;
-        } else if (kind == EnemyKind::Medium) {
+        } else if (kind == EnemyKind::Medium && gunTarget) {
             ev.emitProjectile(x - halfW - 12.0f, lane, -1.0f, -40.0f, 15.0f, 1, true);
             ev.emitSound(Sfx::Attack);
             cdTimer = Config::ATTACK_COOLDOWN;

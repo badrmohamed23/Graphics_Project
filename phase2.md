@@ -3,7 +3,7 @@
 **Course:** DMET 502 Computer Graphics (Winter 2026)
 **Institution:** German University in Cairo (GUC) — Media Engineering and Technology
 **Instructor:** Prof. Dr. Rimon Elias
-**Submission Deadline:** Monday, November 2nd, 2026 @ 11:59 PM
+**Submission Deadline:** Friday, November 6th, 2026 @ 11:59 PM
 **Phase Goal:** Turn the Phase-1 blueprint into a runnable, verified OpenGL 3.3 Core pipeline: lock the toolchain, prove window creation + GL context + shader loading + batched quad rendering + ortho projection + frame-loop timing, and audit each piece against the real codebase before building gameplay logic on top.
 
 **Prerequisite:** `phase1.md` (requirements traceability, coordinate model, FSM, entity schema, math, economy, directory architecture).

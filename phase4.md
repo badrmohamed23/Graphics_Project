@@ -3,7 +3,7 @@
 **Course:** DMET 502 Computer Graphics (Winter 2026)
 **Institution:** German University in Cairo (GUC) — Media Engineering and Technology
 **Instructor:** Prof. Dr. Rimon Elias
-**Submission Deadline:** Monday, November 2nd, 2026 @ 11:59 PM
+**Submission Deadline:** Friday, November 6th, 2026 @ 11:59 PM
 **Phase Goal:** Audit the *systems that drive the game* on top of the Phase-3 visual platform: the 7-state FSM (menus, pause, win/lose), cutscene pacing, input pipeline + lane hover/select, card → lane placement flow, wallet unlock/relock churn, wave cadence and wave-clear predicates, combat dispatch (encounter halt, projectile bands, shielding), economy loop (drops → pickup → HUD), and the bonus audio subsystem — each item proven against the actual codebase, not intentions.
 
 **Prerequisite:** `phase1.md` (FSM §5, entity schema §6, algorithms §7, economy/waves §8) + `phase2.md` (frame loop, Δt) + `phase3.md` (rendering as-built).

@@ -3,7 +3,7 @@
 **Course:** DMET 502 Computer Graphics (Winter 2026)
 **Institution:** German University in Cairo (GUC) — Media Engineering and Technology
 **Instructor:** Prof. Dr. Rimon Elias
-**Submission Deadline:** Monday, November 2nd, 2026 @ 11:59 PM
+**Submission Deadline:** Friday, November 6th, 2026 @ 11:59 PM
 **Phase Goal:** Turn the Phase-2 batch pipeline into a *scene*: compose every gameplay unit (3 player types, 3 enemy types, Home Base, projectiles, coins, ≥5 environment decor elements) out of realistic composite geometric primitives (≥4 modeled parts per component, REQ-C-002), wire the health/damage/grayscale visual contracts (REQ-F-020/021/033/036), and audit every model against the actual codebase before gameplay polish phases (4+) build on top.
 
 **Prerequisite:** `phase1.md` (entity schema, coordinate model, REQ matrix) + `phase2.md` (GL pipeline, batch renderer, Δt loop).

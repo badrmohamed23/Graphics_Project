@@ -3,7 +3,7 @@
 **Course:** DMET 502 Computer Graphics (Winter 2026)
 **Institution:** German University in Cairo (GUC) — Media Engineering and Technology
 **Instructor:** Prof. Dr. Rimon Elias
-**Submission Deadline:** Monday, November 2nd, 2026 @ 11:59 PM
+**Submission Deadline:** Friday, November 6th, 2026 @ 11:59 PM
 **Team Structure:** Strictly 3–4 students
 **Archive Naming:** `[Team Name]-[Member Name].zip`
 

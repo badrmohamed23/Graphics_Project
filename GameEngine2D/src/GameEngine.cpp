@@ -301,6 +301,16 @@ void GameplayState::update(GameEngine& e, float dt, const InputState& in) {
         }
     }
 
+    for (EnemyEntity* en : enemies) {
+        en->gunTarget = false;
+        for (PlayerEntity* p : players) {
+            if (p->alive && p->lane == en->lane && p->x <= en->x && en->x - p->x <= Config::ENEMY_GUN_RANGE) {
+                en->gunTarget = true;
+                break;
+            }
+        }
+    }
+
     for (PlayerEntity* p : players) p->update(dt, ev);
     for (EnemyEntity* en : enemies) en->update(dt, ev);
     for (Projectile& proj : projectiles) proj.update(dt);

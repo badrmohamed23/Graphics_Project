@@ -32,7 +32,9 @@ constexpr float SPEED_HARD = 70.0f;
 constexpr float PROJECTILE_SPEED = 120.0f;
 constexpr float PROJECTILE_HALF_H = 15.0f;
 constexpr float ATTACK_COOLDOWN = 1.0f;
+constexpr float ATTACK_COOLDOWN_MELEE = 0.5f;
 constexpr float RANGED_RANGE = 400.0f;
+constexpr float ENEMY_GUN_RANGE = 120.0f;
 
 constexpr float JUMP_H_MAX = 60.0f;
 constexpr float JUMP_TIME = 0.8f;
@@ -47,7 +49,7 @@ constexpr float LOW_PROJ_Y_MAX = 0.0f;
 constexpr float HIGH_PROJ_Y_MIN = 10.0f;
 constexpr float HIGH_PROJ_Y_MAX = 50.0f;
 
-constexpr int START_COINS = 30;
+constexpr int START_COINS = 40;
 constexpr int COST_MELEE = 10;
 constexpr int COST_RANGED = 20;
 constexpr int COST_DEFENSE = 30;
@@ -58,11 +60,11 @@ constexpr int DROP_HARD = 25;
 constexpr int HP_MELEE = 5;
 constexpr int HP_RANGED = 5;
 constexpr int HP_DEFENSE = 7;
-constexpr int HP_EASY = 5;
-constexpr int HP_MEDIUM = 5;
-constexpr int HP_HARD = 7;
+constexpr int HP_EASY = 3;
+constexpr int HP_MEDIUM = 4;
+constexpr int HP_HARD = 5;
 
-constexpr float WAVE_INTERVALS[3] = { 4.0f, 3.0f, 2.5f };
+constexpr float WAVE_INTERVALS[3] = { 5.0f, 4.0f, 3.0f };
 constexpr int WAVE_COUNTS[3] = { 3, 5, 10 };
 
 constexpr float CUTSCENE_DURATION = 15.0f;
