@@ -14,8 +14,8 @@ struct UIRect {
 UIRect uiCardRect(int index);
 PlayerKind uiCardKind(int index);
 int uiHoveredCard(float mx, float my);
-void uiDrawCard(Renderer2D& r, int index, bool unlocked, bool selected, bool hovered, float time);
-void uiDrawToolbar(Renderer2D& r, WalletManager& wallet, int waveDisplay, float time, float mx, float my, int selectedCardIndex);
+void uiDrawToolbar(Renderer2D& r, const WalletManager& wallet, bool hasAttacker, int waveDisplay,
+                   bool waveStarted, float time, float mx, float my, int selectedCardIndex);
 void uiDrawButton(Renderer2D& r, const UIRect& rect, const char* label, bool hovered, Vec3 base);
 void uiDrawHomeBase(Renderer2D& r, float time);
 void uiDrawEnvironment(Renderer2D& r, float time);

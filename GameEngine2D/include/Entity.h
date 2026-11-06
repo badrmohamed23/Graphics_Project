@@ -27,10 +27,13 @@ struct SimEvents {
 };
 
 struct Coin {
-    float x = 0.0f, y = 0.0f;
+    float x = 0.0f;
+    int lane = 0;
     int value = 10;
     float phase = 0.0f;
     bool alive = true;
+
+    float centerY() const { return Config::laneYCenter(lane) + 3.0f * sinf(phase); }
 };
 
 struct Projectile {
@@ -88,7 +91,7 @@ public:
     bool alive = true;
     bool engaged = false;
     bool deadHandled = false;
-    float cdTimer = 0.4f;
+    float cdTimer = 0.0f;
     float walkPhase = 0.0f;
 
     virtual ~Entity() = default;
@@ -121,8 +124,8 @@ public:
     EvadeState evade = EvadeState::None;
     bool duckHeld = false;
     float jumpT = 0.0f;
-    bool aimTarget = false;
 
+    bool isActive() const { return alive && x < Config::WORLD_W; }
     float yOffset() const override {
         if (evade != EvadeState::Jump) return 0.0f;
         float t = jumpT / Config::JUMP_TIME;
@@ -139,9 +142,6 @@ public:
         b.minY = yc - halfH + j; b.maxY = yc + top + j;
         return b;
     }
-    bool isShieldedBy(const PlayerEntity* def) const {
-        return def && def->alive && def->kind == PlayerKind::Defense && this != def && this->x < def->x;
-    }
     void update(float dt, SimEvents& ev) override;
     void draw(Renderer2D& r, float time) const override;
     static PlayerEntity* make(PlayerKind k, int lane);
@@ -156,8 +156,6 @@ class EnemyEntity : public Entity {
 public:
     EnemyKind kind = EnemyKind::Easy;
     float speed = Config::SPEED_EASY;
-    Entity* strikeTarget = nullptr;
-    bool gunTarget = false;
 
     void update(float dt, SimEvents& ev) override;
     void draw(Renderer2D& r, float time) const override;

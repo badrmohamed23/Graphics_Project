@@ -20,6 +20,7 @@ PlayerEntity* PlayerEntity::make(PlayerKind k, int lane) {
             p->damage = 1;
             break;
         case PlayerKind::Defense:
+            p->x = Config::X_DEFENSE_SPAWN;
             p->hp = p->maxHp = Config::HP_DEFENSE;
             p->cost = Config::COST_DEFENSE;
             p->damage = 0;
@@ -29,10 +30,7 @@ PlayerEntity* PlayerEntity::make(PlayerKind k, int lane) {
 }
 
 void PlayerEntity::update(float dt, SimEvents& ev) {
-    if (kind == PlayerKind::Defense) {
-        cdTimer = 1.0f;
-        return;
-    }
+    if (kind == PlayerKind::Defense) return;
     tickCooldown(dt);
     if (evade == EvadeState::Jump) {
         jumpT += dt;
@@ -41,17 +39,20 @@ void PlayerEntity::update(float dt, SimEvents& ev) {
             jumpT = 0.0f;
         }
     }
-    bool blockedEngage = engaged;
-    if (!blockedEngage) {
+    if (!engaged || !isActive()) {
         x += Config::SPEED_MARCH * dt;
         walkPhase += dt;
     }
-    if (kind == PlayerKind::Ranged && aimTarget && cdTimer <= 0.0f) {
+    // The last part of the walk offscreen is visible but no longer playable.
+    if (!isActive()) {
+        if (x - halfW >= Config::WORLD_W) alive = false;
+        return;
+    }
+    if (kind == PlayerKind::Ranged && cdTimer <= 0.0f) {
         ev.emitProjectile(x + halfW + 12.0f, lane, 1.0f, 0.0f, Config::PROJECTILE_HALF_H, damage, false);
         ev.emitSound(Sfx::Attack);
         cdTimer = Config::ATTACK_COOLDOWN;
     }
-    if (x > Config::X_PLAYER_CAP) x = Config::X_PLAYER_CAP;
 }
 
 EnemyEntity* EnemyEntity::make(EnemyKind k, int lane) {
@@ -67,20 +68,17 @@ EnemyEntity* EnemyEntity::make(EnemyKind k, int lane) {
             e->hp = e->maxHp = Config::HP_EASY;
             e->speed = Config::SPEED_EASY;
             e->reward = Config::DROP_EASY;
-            e->cdTimer = 0.6f;
             break;
         case EnemyKind::Medium:
             e->hp = e->maxHp = Config::HP_MEDIUM;
             e->speed = Config::SPEED_MEDIUM;
             e->reward = Config::DROP_MEDIUM;
-            e->cdTimer = 0.45f;
             break;
         case EnemyKind::Hard:
             e->hp = e->maxHp = Config::HP_HARD;
             e->speed = Config::SPEED_HARD;
             e->reward = Config::DROP_HARD;
             e->damage = 2;
-            e->cdTimer = 0.8f;
             break;
     }
     return e;
@@ -92,27 +90,12 @@ void EnemyEntity::update(float dt, SimEvents& ev) {
         x -= speed * dt;
         walkPhase += dt;
     }
-    if (cdTimer <= 0.0f) {
-        if (kind == EnemyKind::Easy && gunTarget) {
-            ev.emitProjectile(x - halfW - 12.0f, lane, -1.0f, 30.0f, 20.0f, 1, true);
-            ev.emitSound(Sfx::Attack);
-            cdTimer = Config::ATTACK_COOLDOWN;
-        } else if (kind == EnemyKind::Medium && gunTarget) {
-            ev.emitProjectile(x - halfW - 12.0f, lane, -1.0f, -40.0f, 15.0f, 1, true);
-            ev.emitSound(Sfx::Attack);
-            cdTimer = Config::ATTACK_COOLDOWN;
-        } else if (kind == EnemyKind::Hard && engaged && strikeTarget && strikeTarget->alive) {
-            strikeTarget->takeDamage(damage);
-            ev.emitSound(Sfx::Hit);
-            cdTimer = Config::ATTACK_COOLDOWN;
-        }
-    }
-}
-
-static void drawHealthBar(Renderer2D& r, float x, float topY, int hp, int maxHp) {
-    float w = 44.0f, h = 6.0f;
-    float frac = maxHp > 0 ? (float)hp / (float)maxHp : 0.0f;
-    r.pushBar(x - w * 0.5f, topY, w, h, frac, Vec3(0.15f, 0.85f, 0.25f), Vec3(0.05f, 0.05f, 0.08f));
+    if (cdTimer > 0.0f || kind == EnemyKind::Hard) return;
+    const bool high = kind == EnemyKind::Easy;
+    ev.emitProjectile(x - halfW - 12.0f, lane, -1.0f, high ? 30.0f : Config::LOW_SHOT_CENTER_Y,
+                      high ? 20.0f : Config::LOW_SHOT_HALF_H, damage, true);
+    ev.emitSound(Sfx::Attack);
+    cdTimer = high ? Config::ATTACK_COOLDOWN : Config::ATTACK_COOLDOWN_MEDIUM;
 }
 
 void PlayerEntity::drawMelee(Renderer2D& r, float yc, float j, float time) const {
@@ -142,17 +125,19 @@ void PlayerEntity::drawMelee(Renderer2D& r, float yc, float j, float time) const
     r.pushQuad(xf - 4.0f, bodyTop + 4.0f * duckF, 4.0f, 6.0f, Vec3(0.7f, 0.7f, 0.75f));
 
     float swing = (evade == EvadeState::Jump) ? 0.0f : sinf((walkPhase * 12.0f) + 1.2f) * 2.0f;
-    float armY = bodyY + 8.0f * duckF + swing;
-    r.pushQuad(xf + 20.0f, armY, 16.0f, 7.0f, dmgColor(damageTint(), suitDark));
-    r.pushQuad(xf + 33.0f, armY, 10.0f, 9.0f, Vec3(0.75f, 0.8f, 0.85f));
-    r.pushQuad(xf + 43.0f, armY, 6.0f, 12.0f, Vec3(0.4f, 0.45f, 0.5f));
-    if (cdTimer > Config::ATTACK_COOLDOWN - 0.12f) {
-        r.pushCircle(xf + 50.0f, armY, 7.0f, Vec3(0.4f, 1.0f, 1.0f), 10);
+    const float strikeDuration = 0.18f;
+    float strike = clamp01(1.0f - (Config::ATTACK_COOLDOWN_MELEE - cdTimer) / strikeDuration);
+    float reach = 14.0f * strike;
+    float armY = bodyY + 8.0f * duckF + swing + 6.0f * strike;
+    r.pushQuad(xf + 20.0f + reach * 0.5f, armY, 16.0f + reach, 7.0f, dmgColor(damageTint(), suitDark));
+    r.pushQuad(xf + 33.0f + reach, armY, 10.0f, 9.0f, Vec3(0.75f, 0.8f, 0.85f));
+    r.pushQuad(xf + 43.0f + reach, armY, 6.0f, 12.0f, Vec3(0.4f, 0.45f, 0.5f));
+    if (strike > 0.0f) {
+        r.pushCircle(xf + 50.0f + reach, armY, 7.0f * strike, Vec3(0.4f, 1.0f, 1.0f), 10);
     }
     float shieldPad = bodyY - 6.0f * duckF;
     r.pushQuad(xf - 20.0f, shieldPad, 6.0f, 16.0f * duckF, dmgColor(damageTint(), Vec3(0.55f, 0.6f, 0.7f)));
     r.pushQuad(xf - 20.0f, shieldPad, 2.0f, 12.0f * duckF, Vec3(0.9f, 0.85f, 0.3f));
-    drawHealthBar(r, xf, bodyTop + 12.0f * duckF, hp, maxHp);
 }
 
 void PlayerEntity::drawRanged(Renderer2D& r, float yc, float j, float time) const {
@@ -188,7 +173,6 @@ void PlayerEntity::drawRanged(Renderer2D& r, float yc, float j, float time) cons
     if (recoil > 0.0f) {
         r.pushCircle(x + 58.0f, armY, 6.0f, Vec3(0.5f, 1.0f, 0.9f), 10);
     }
-    drawHealthBar(r, x, bodyTop + 12.0f * duckF, hp, maxHp);
 }
 
 void PlayerEntity::drawDefense(Renderer2D& r, float yc, float time) const {
@@ -214,7 +198,6 @@ void PlayerEntity::drawDefense(Renderer2D& r, float yc, float time) const {
     r.pushQuad(x + halfW + 8.0f, yc, 5.0f, barrierH, barrier);
     r.pushQuad(x + halfW + 8.0f, yc + barrierH * 0.5f, 9.0f, 3.0f, barrier * 1.4f);
     r.pushQuad(x + halfW + 8.0f, yc - barrierH * 0.5f, 9.0f, 3.0f, barrier * 1.4f);
-    drawHealthBar(r, x, bodyTop + 10.0f, hp, maxHp);
 }
 
 void PlayerEntity::draw(Renderer2D& r, float time) const {
@@ -245,7 +228,6 @@ void EnemyEntity::drawEasy(Renderer2D& r, float yc, float time) const {
     if (cdTimer > Config::ATTACK_COOLDOWN - 0.15f) {
         r.pushCircle(x - 26.0f, cannonY + 10.0f, 6.0f, Vec3(1.0f, 0.4f, 1.0f), 10);
     }
-    drawHealthBar(r, x, cy + halfH + 16.0f, hp, maxHp);
 }
 
 void EnemyEntity::drawMedium(Renderer2D& r, float yc, float time) const {
@@ -272,10 +254,9 @@ void EnemyEntity::drawMedium(Renderer2D& r, float yc, float time) const {
     float cannonY = base + 18.0f;
     r.pushQuad(x - 18.0f, cannonY, 16.0f, 7.0f, carapaceDark);
     r.pushQuad(x - 30.0f, cannonY - 4.0f, 10.0f, 10.0f, Vec3(0.4f, 0.22f, 0.05f));
-    if (cdTimer > Config::ATTACK_COOLDOWN - 0.15f) {
+    if (cdTimer > Config::ATTACK_COOLDOWN_MEDIUM - 0.15f) {
         r.pushCircle(x - 34.0f, cannonY - 2.0f, 6.0f, Vec3(1.0f, 0.6f, 0.2f), 10);
     }
-    drawHealthBar(r, x, base + 62.0f, hp, maxHp);
 }
 
 void EnemyEntity::drawHard(Renderer2D& r, float yc, float time) const {
@@ -311,7 +292,6 @@ void EnemyEntity::drawHard(Renderer2D& r, float yc, float time) const {
     if (engaged && cdTimer > Config::ATTACK_COOLDOWN - 0.15f) {
         r.pushCircle(x - 40.0f, armY, 8.0f, Vec3(1.0f, 0.3f, 0.3f), 10);
     }
-    drawHealthBar(r, x, bodyY + 38.0f, hp, maxHp);
 }
 
 void EnemyEntity::draw(Renderer2D& r, float time) const {

@@ -18,10 +18,13 @@ constexpr float LANE_HEIGHT = 120.0f;
 constexpr float LANE_Y_MIN[LANE_COUNT] = { 80.0f, 220.0f, 360.0f, 500.0f };
 constexpr float LANE_Y_CENTER[LANE_COUNT] = { 140.0f, 280.0f, 420.0f, 560.0f };
 
+constexpr float ENTITY_HALF_W = 30.0f;
+constexpr float ENTITY_HALF_H = 45.0f;
+
 constexpr float X_HOME = 160.0f;
 constexpr float X_PLAYER_SPAWN = 170.0f;
-constexpr float X_ENEMY_SPAWN = 1260.0f;
-constexpr float X_PLAYER_CAP = 1270.0f;
+constexpr float X_DEFENSE_SPAWN = 330.0f;
+constexpr float X_ENEMY_SPAWN = WORLD_W + ENTITY_HALF_W;
 
 constexpr float SPEED_MARCH = 40.0f;
 constexpr float SPEED_DEFENSE = 0.0f;
@@ -33,26 +36,25 @@ constexpr float PROJECTILE_SPEED = 120.0f;
 constexpr float PROJECTILE_HALF_H = 15.0f;
 constexpr float ATTACK_COOLDOWN = 1.0f;
 constexpr float ATTACK_COOLDOWN_MELEE = 0.5f;
-constexpr float RANGED_RANGE = 400.0f;
-constexpr float ENEMY_GUN_RANGE = 120.0f;
+// Marching toward incoming shots shortens the time between dodges.
+constexpr float ATTACK_COOLDOWN_MEDIUM = 1.9f;
 
-constexpr float JUMP_H_MAX = 60.0f;
-constexpr float JUMP_TIME = 0.8f;
+constexpr float JUMP_H_MAX = 36.0f;
+constexpr float JUMP_TIME = 0.9f;
 constexpr float JUMP_DODGE_THRESHOLD = 35.0f;
 constexpr float DUCK_HEIGHT_FACTOR = 0.5f;
 
-constexpr float ENTITY_HALF_W = 30.0f;
-constexpr float ENTITY_HALF_H = 45.0f;
 constexpr float DUCK_TOP_OFFSET = 8.0f;
 
-constexpr float LOW_PROJ_Y_MAX = 0.0f;
+constexpr float LOW_SHOT_CENTER_Y = -43.0f;
+constexpr float LOW_SHOT_HALF_H = 11.0f;
 constexpr float HIGH_PROJ_Y_MIN = 10.0f;
 constexpr float HIGH_PROJ_Y_MAX = 50.0f;
 
-constexpr int START_COINS = 40;
 constexpr int COST_MELEE = 10;
 constexpr int COST_RANGED = 20;
 constexpr int COST_DEFENSE = 30;
+constexpr int START_COINS = 3 * COST_MELEE;
 constexpr int DROP_EASY = 10;
 constexpr int DROP_MEDIUM = 15;
 constexpr int DROP_HARD = 25;
@@ -60,17 +62,16 @@ constexpr int DROP_HARD = 25;
 constexpr int HP_MELEE = 5;
 constexpr int HP_RANGED = 5;
 constexpr int HP_DEFENSE = 7;
-constexpr int HP_EASY = 3;
-constexpr int HP_MEDIUM = 4;
-constexpr int HP_HARD = 5;
+constexpr int HP_EASY = 5;
+constexpr int HP_MEDIUM = 5;
+constexpr int HP_HARD = 7;
 
 constexpr float WAVE_INTERVALS[3] = { 5.0f, 4.0f, 3.0f };
 constexpr int WAVE_COUNTS[3] = { 3, 5, 10 };
 
 constexpr float CUTSCENE_DURATION = 15.0f;
 
-constexpr float MAGNET_RADIUS = 40.0f;
-constexpr float COIN_SIZE = 18.0f;
+constexpr float COIN_RADIUS = 9.0f;
 
 inline float laneYCenter(int lane) {
     lane = lane < 0 ? 0 : (lane > LANE_COUNT - 1 ? LANE_COUNT - 1 : lane);

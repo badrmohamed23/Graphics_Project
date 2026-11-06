@@ -27,7 +27,8 @@ void GridSystem::draw(Renderer2D& r, float time) const {
         r.pushQuad(Config::WORLD_W * 0.5f, yTop - 2.0f, Config::WORLD_W, 2.0f, Vec3(0.12f, 0.13f, 0.18f));
         for (int t = 0; t < 8; ++t) {
             float tx = 90.0f + t * 140.0f;
-            r.pushQuad(tx, (yMin + yTop) * 0.5f, 120.0f, Config::LANE_HEIGHT - 8.0f, Vec3(0.02f, 0.02f, 0.04f));
+            Vec3 tile = Vec3(0.02f, 0.02f, 0.04f).mix(base, sel || hov ? 0.6f : 0.0f);
+            r.pushQuad(tx, (yMin + yTop) * 0.5f, 120.0f, Config::LANE_HEIGHT - 8.0f, tile);
         }
         if (sel) {
             Vec3 edge(0.2f, 0.9f, 0.75f);

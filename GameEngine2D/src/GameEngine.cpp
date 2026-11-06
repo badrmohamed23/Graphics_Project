@@ -10,6 +10,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <algorithm>
 #include <cmath>
 #define PSAPI_VERSION 2
 #include <windows.h>
@@ -129,6 +130,7 @@ public:
     void draw(GameEngine& e, Renderer2D& r) override {
         float t = mTimer;
         uiDrawEnvironment(r, e.gameTime());
+        uiDrawHomeBase(r, e.gameTime());
 
         float gX = 130.0f;
         if (t < 4.0f) gX = lerp(110.0f, 200.0f, t / 4.0f);
@@ -144,7 +146,17 @@ public:
         else if (t >= 7.0f) x2X = 1120.0f + 6.0f * sinf(t * 1.7f);
         mXenoLower->x = x2X;
 
-        if (t >= 10.0f) {
+        mGuardian->duckHeld = t >= 11.4f && t < 12.1f;
+        if (t >= 9.5f && t < 12.0f) {
+            Projectile shot;
+            shot.x = lerp(x1X - 32.0f, 110.0f, (t - 9.5f) / 2.5f);
+            shot.lane = mGuardian->lane;
+            shot.dir = -1.0f;
+            shot.yRel = 30.0f;
+            shot.halfH = 20.0f;
+            shot.draw(r, t);
+        }
+        if (t >= 12.1f) {
             Vec3 charge(0.4f, 1.0f, 1.0f);
             float pulse = 0.5f + 0.5f * sinf(t * 14.0f);
             r.pushCircle(gX + 50.0f, Config::laneYCenter(2) + 22.0f, 12.0f + 6.0f * pulse, charge * pulse, 16);
@@ -194,6 +206,11 @@ public:
     int selectedCard = -1;
 
 private:
+    bool hasActiveAttacker() const {
+        return std::any_of(players.begin(), players.end(), [](const PlayerEntity* p) {
+            return p->isActive() && p->kind != PlayerKind::Defense;
+        });
+    }
     void reset() {
         for (PlayerEntity* p : players) delete p;
         players.clear();
@@ -206,7 +223,7 @@ private:
         wallet.reset();
         selectedCard = -1;
     }
-    void pruneDead(SimEvents& ev) {
+    void pruneDead() {
         for (size_t i = players.size(); i > 0; --i) {
             PlayerEntity* p = players[i - 1];
             if (!p->alive) {
@@ -227,15 +244,14 @@ private:
         for (size_t i = coins.size(); i > 0; --i) {
             if (!coins[i - 1].alive) coins.erase(coins.begin() + (long)(i - 1));
         }
-        (void)ev;
     }
-    void drawCoins(Renderer2D& r, float time) {
-        for (Coin& c : coins) {
+    void drawCoins(Renderer2D& r) const {
+        for (const Coin& c : coins) {
             if (!c.alive) continue;
-            float bob = sinf(time * 4.0f + c.phase) * 3.0f;
+            float cy = c.centerY();
             Vec3 gold(1.0f, 0.82f, 0.25f);
-            r.pushCircle(c.x, c.y + bob, 9.0f, gold, 14);
-            r.pushCircle(c.x - 2.0f, c.y + bob + 2.0f, 4.0f, gold * 1.4f, 8);
+            r.pushCircle(c.x, cy, Config::COIN_RADIUS, gold, 14);
+            r.pushCircle(c.x - 2.0f, cy + 2.0f, 4.0f, gold * 1.4f, 8);
         }
     }
 };
@@ -256,7 +272,7 @@ void GameplayState::update(GameEngine& e, float dt, const InputState& in) {
 
     if (in.jumpPressed) {
         for (PlayerEntity* p : players) {
-            if (p->kind == PlayerKind::Defense) continue;
+            if (!p->isActive() || p->kind == PlayerKind::Defense || p->evade == EvadeState::Jump) continue;
             if (grid.isSelected(p->lane)) {
                 p->evade = EvadeState::Jump;
                 p->jumpT = 0.0f;
@@ -264,25 +280,24 @@ void GameplayState::update(GameEngine& e, float dt, const InputState& in) {
         }
     }
     for (PlayerEntity* p : players) {
-        if (p->kind == PlayerKind::Defense) continue;
-        p->duckHeld = grid.isSelected(p->lane) && in.duckHeld;
+        p->duckHeld = p->isActive() && p->kind != PlayerKind::Defense && grid.isSelected(p->lane) && in.duckHeld;
     }
 
     if (in.clickPressed) {
-        fprintf(stderr, "[CLICK] game state path t=%.2f mx=%d my=%d card=%d\n", e.gameTime(), in.mouseX, in.mouseY, selectedCard);
+        fprintf(stderr, "[CLICK] game state path t=%.2f mx=%.0f my=%.0f card=%d\n", e.gameTime(), in.mouseX, in.mouseY, selectedCard);
+        const bool hasAttacker = hasActiveAttacker();
         int hov = uiHoveredCard(in.mouseX, in.mouseY);
         if (hov >= 0) {
             PlayerKind k = uiCardKind(hov);
-            if (wallet.isUnlocked(k)) selectedCard = hov;
+            if (wallet.lockReason(k, hasAttacker) == CardLock::None) selectedCard = hov;
         } else if (grid.inBattleground(in.mouseX, in.mouseY)) {
             if (selectedCard >= 0) {
                 PlayerKind k = uiCardKind(selectedCard);
                 int lane = Config::laneFromY(in.mouseY);
-                int cost = WalletManager::cardCost(k);
-                if (lane >= 0 && wallet.balance() >= cost) {
+                if (lane >= 0 && wallet.lockReason(k, hasAttacker) == CardLock::None) {
                     players.push_back(PlayerEntity::make(k, lane));
                     fprintf(stderr, "[DEPLOY] t=%.2f kind=%d lane=%d\n", e.gameTime(), (int)k, lane);
-                    wallet.spend(cost);
+                    wallet.spend(WalletManager::cardCost(k));
                     ev.emitSound(Sfx::Place);
                     selectedCard = -1;
                 }
@@ -292,33 +307,22 @@ void GameplayState::update(GameEngine& e, float dt, const InputState& in) {
         }
     }
 
-    for (PlayerEntity* p : players) {
-        if (p->kind != PlayerKind::Ranged) continue;
-        p->aimTarget = false;
-        for (EnemyEntity* en : enemies) {
-            if (en->alive && en->lane == p->lane && en->x > p->x && en->x - p->x <= Config::RANGED_RANGE) {
-                p->aimTarget = true;
-                break;
-            }
-        }
-    }
-
-    for (EnemyEntity* en : enemies) {
-        en->gunTarget = false;
-        for (PlayerEntity* p : players) {
-            if (p->alive && p->lane == en->lane && p->x <= en->x && en->x - p->x <= Config::ENEMY_GUN_RANGE) {
-                en->gunTarget = true;
-                break;
-            }
-        }
-    }
-
     for (PlayerEntity* p : players) p->update(dt, ev);
     for (EnemyEntity* en : enemies) en->update(dt, ev);
-    for (Projectile& proj : projectiles) proj.update(dt);
 
-    bool homeBreached = false;
-    SpatialCollision::resolve(players, enemies, projectiles, coins, ev, homeBreached);
+    const bool homeBreached = std::any_of(enemies.begin(), enemies.end(), [](const EnemyEntity* en) {
+        return en->alive && en->x - en->halfW <= Config::X_HOME;
+    });
+    if (homeBreached) {
+        e.audio.play(Sfx::Lose);
+        e.audio.stopBgm();
+        e.switchTo(AppStateId::Lose);
+        return;
+    }
+
+    for (Projectile& proj : projectiles) proj.update(dt);
+    for (Coin& c : coins) c.phase += dt * 4.0f;
+    SpatialCollision::resolve(players, enemies, projectiles, coins, ev);
 
     for (Coin& c : coins) {
         if (!c.alive) wallet.earn(c.value);
@@ -328,7 +332,7 @@ void GameplayState::update(GameEngine& e, float dt, const InputState& in) {
         if (!en->alive && !en->deadHandled) {
             Coin drop;
             drop.x = en->x;
-            drop.y = Config::laneYCenter(en->lane);
+            drop.lane = en->lane;
             drop.value = en->reward;
             drop.phase = (float)(rand() % 628) / 100.0f;
             coins.push_back(drop);
@@ -337,7 +341,7 @@ void GameplayState::update(GameEngine& e, float dt, const InputState& in) {
         }
     }
     for (PlayerEntity* p : players) {
-        if (!p->alive && !p->deadHandled) {
+        if (!p->alive && p->hp == 0 && !p->deadHandled) {
             ev.emitSound(Sfx::Death);
             p->deadHandled = true;
         }
@@ -355,15 +359,9 @@ void GameplayState::update(GameEngine& e, float dt, const InputState& in) {
         proj.fromEnemy = pp.fromEnemy;
         projectiles.push_back(proj);
     }
-    ev.clear();
-
-    pruneDead(ev);
-
-    if (homeBreached) {
-        e.audio.play(Sfx::Lose);
-        e.audio.stopBgm();
-        e.switchTo(AppStateId::Lose);
-        return;
+    pruneDead();
+    if (selectedCard >= 0 && wallet.lockReason(uiCardKind(selectedCard), hasActiveAttacker()) != CardLock::None) {
+        selectedCard = -1;
     }
     if (spawner.allWavesCleared()) {
         e.audio.play(Sfx::Win);
@@ -374,6 +372,35 @@ void GameplayState::update(GameEngine& e, float dt, const InputState& in) {
     if (in.mutePressed) e.audio.toggleMute();
 }
 
+template<class Unit>
+static void drawHealthRow(Renderer2D& r, const std::vector<Unit*>& units, int lane, float y, const Vec3& color) {
+    std::vector<const Unit*> row;
+    for (const Unit* unit : units) {
+        if (unit->alive && unit->lane == lane && unit->x - unit->halfW < Config::WORLD_W) row.push_back(unit);
+    }
+    if (row.empty()) return;
+    std::stable_sort(row.begin(), row.end(), [](const Unit* a, const Unit* b) { return a->x < b->x; });
+
+    // Spread overlapping bars along the lane gutter so each stays readable.
+    const float gap = 3.0f;
+    const float width = std::min(38.0f, Config::WORLD_W / static_cast<float>(row.size()) - gap);
+    std::vector<float> left(row.size());
+    float next = 0.0f;
+    for (size_t i = 0; i < row.size(); ++i) {
+        left[i] = std::max(next, row[i]->x - width * 0.5f);
+        next = left[i] + width + gap;
+    }
+    float limit = Config::WORLD_W - width;
+    for (size_t i = row.size(); i > 0; --i) {
+        left[i - 1] = std::min(left[i - 1], limit);
+        limit = left[i - 1] - width - gap;
+    }
+    for (size_t i = 0; i < row.size(); ++i) {
+        float fraction = static_cast<float>(row[i]->hp) / row[i]->maxHp;
+        r.pushBar(left[i], y, width, 5.0f, fraction, color, Vec3(0.18f, 0.20f, 0.23f));
+    }
+}
+
 void GameplayState::draw(GameEngine& e, Renderer2D& r) {
     float t = e.gameTime();
     const InputState& in = e.lastInput;
@@ -382,21 +409,23 @@ void GameplayState::draw(GameEngine& e, Renderer2D& r) {
     uiDrawHomeBase(r, t);
     for (Projectile& proj : projectiles) proj.draw(r, t);
     for (EnemyEntity* en : enemies) en->draw(r, t);
-    for (PlayerEntity* p : players) p->draw(r, t);
-    drawCoins(r, t);
-    uiDrawToolbar(r, wallet, spawner.waveIndex() + 1, t, in.mouseX, in.mouseY, selectedCard);
-    drawSubText(r, "CLICK A CARD, THEN A LANE TO DEPLOY", 618.0f, 1.8f, Vec3(0.35f, 0.65f, 0.6f));
+    for (PlayerEntity* p : players) if (p->alive) p->draw(r, t);
+    drawCoins(r);
+    for (int lane = 0; lane < Config::LANE_COUNT; ++lane) {
+        const float bottom = Config::laneBottomY(lane);
+        drawHealthRow(r, players, lane, bottom - 8.0f, Vec3(0.24f, 0.91f, 0.63f));
+        drawHealthRow(r, enemies, lane, bottom - 16.0f, Vec3(1.0f, 0.46f, 0.30f));
+    }
+    uiDrawToolbar(r, wallet, hasActiveAttacker(), spawner.waveIndex() + 1, spawner.spawnedThisWave() > 0,
+                  t, in.mouseX, in.mouseY, selectedCard);
 }
 
 class PauseMenuState : public AppState {
 public:
-    void enter(GameEngine& e) override {
-        GameplayState* gp = static_cast<GameplayState*>(e.state(AppStateId::Gameplay));
-        gp->resetOnEnter = false;
-    }
     void update(GameEngine& e, float dt, const InputState& in) override {
         (void)dt;
         if (in.escPressed || (in.clickPressed && BTN_RESUME.contains(in.mouseX, in.mouseY))) {
+            static_cast<GameplayState*>(e.state(AppStateId::Gameplay))->resetOnEnter = false;
             e.switchTo(AppStateId::Gameplay);
             return;
         }

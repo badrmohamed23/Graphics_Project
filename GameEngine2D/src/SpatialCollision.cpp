@@ -1,34 +1,40 @@
 #include "SpatialCollision.h"
+#include <algorithm>
+
+static bool inFront(const PlayerEntity* candidate, const PlayerEntity* current) {
+    return !current || candidate->x > current->x ||
+        (candidate->x == current->x && candidate->kind == PlayerKind::Defense);
+}
 
 void SpatialCollision::resolve(std::vector<PlayerEntity*>& players, std::vector<EnemyEntity*>& enemies,
                               std::vector<Projectile>& projectiles, std::vector<Coin>& coins,
-                              SimEvents& ev, bool& homeBreached) {
+                              SimEvents& ev) {
     for (PlayerEntity* p : players) p->engaged = false;
     for (EnemyEntity* e : enemies) {
         if (!e->alive) continue;
         e->engaged = false;
-        e->strikeTarget = nullptr;
         AABB eb = e->box();
         PlayerEntity* best = nullptr;
         for (PlayerEntity* p : players) {
-            if (!p->alive) continue;
+            if (!p->isActive()) continue;
             if (p->lane != e->lane) continue;
             AABB pb = p->box();
             if (!eb.overlaps(pb)) continue;
             p->engaged = true;
-            if (!best || p->x > best->x) best = p;
+            if (inFront(p, best)) best = p;
         }
         if (best) {
             e->engaged = true;
-            e->strikeTarget = best;
-        }
-        if (e->x - e->halfW <= Config::X_HOME) {
-            homeBreached = true;
+            if (e->kind == EnemyKind::Hard && e->cdTimer <= 0.0f) {
+                best->takeDamage(e->damage);
+                e->cdTimer = Config::ATTACK_COOLDOWN;
+                ev.emitSound(Sfx::Hit);
+            }
         }
     }
 
     for (PlayerEntity* p : players) {
-        if (!p->alive || p->kind == PlayerKind::Defense) continue;
+        if (!p->isActive() || p->kind == PlayerKind::Defense) continue;
         if (p->kind == PlayerKind::Melee && p->cdTimer <= 0.0f) {
             AABB pb = p->box();
             EnemyEntity* target = nullptr;
@@ -38,7 +44,7 @@ void SpatialCollision::resolve(std::vector<PlayerEntity*>& players, std::vector<
                 if (!target || e->x < target->x) target = e;
             }
             if (target) {
-                target->takeDamage(1);
+                target->takeDamage(p->damage);
                 p->cdTimer = Config::ATTACK_COOLDOWN_MELEE;
                 ev.emitSound(Sfx::Attack);
             }
@@ -47,40 +53,29 @@ void SpatialCollision::resolve(std::vector<PlayerEntity*>& players, std::vector<
 
     for (Projectile& proj : projectiles) {
         if (!proj.alive) continue;
+        const AABB shot = proj.box();
         if (proj.fromEnemy) {
-            PlayerEntity* defShield = nullptr;
-            for (PlayerEntity* p : players) {
-                if (!p->alive || p->lane != proj.lane) continue;
-                if (p->kind == PlayerKind::Defense && p->alive) defShield = p;
-            }
             PlayerEntity* hit = nullptr;
+            // Incoming shots meet the front unit first, including a shield between
+            // the shot and an ally walking behind it.
             for (PlayerEntity* p : players) {
-                if (!p->alive || p->lane != proj.lane) continue;
-                if (!proj.box().overlaps(p->box())) continue;
-                if (!hit || p->x >= hit->x) hit = p;
+                if (!p->isActive() || p->lane != proj.lane) continue;
+                if (shot.overlaps(p->box()) && inFront(p, hit)) hit = p;
             }
             if (hit) {
-                if (defShield && hit->isShieldedBy(defShield) && defShield->alive) {
-                    if (defShield->box().overlaps(proj.box())) {
-                        defShield->takeDamage(1);
-                        proj.alive = false;
-                        ev.emitSound(Sfx::Hit);
-                    }
-                } else {
-                    hit->takeDamage(1);
-                    proj.alive = false;
-                    ev.emitSound(Sfx::Hit);
-                }
+                hit->takeDamage(proj.damage);
+                proj.alive = false;
+                ev.emitSound(Sfx::Hit);
             }
         } else {
             EnemyEntity* hit = nullptr;
             for (EnemyEntity* e : enemies) {
                 if (!e->alive || e->lane != proj.lane) continue;
-                if (!proj.box().overlaps(e->box())) continue;
+                if (!shot.overlaps(e->box())) continue;
                 if (!hit || e->x <= hit->x) hit = e;
             }
             if (hit) {
-                hit->takeDamage(1);
+                hit->takeDamage(proj.damage);
                 proj.alive = false;
                 ev.emitSound(Sfx::Hit);
             }
@@ -88,13 +83,14 @@ void SpatialCollision::resolve(std::vector<PlayerEntity*>& players, std::vector<
     }
 
     for (PlayerEntity* p : players) {
-        if (!p->alive) continue;
+        if (!p->isActive()) continue;
         AABB pb = p->box();
         for (Coin& c : coins) {
-            if (!c.alive) continue;
-            float dx = c.x - p->x;
-            float dy = c.y - (p->yCenter() + p->yOffset());
-            if (dx * dx + dy * dy <= Config::MAGNET_RADIUS * Config::MAGNET_RADIUS) {
+            if (!c.alive || c.lane != p->lane) continue;
+            const float cy = c.centerY();
+            const float dx = c.x - std::clamp(c.x, pb.minX, pb.maxX);
+            const float dy = cy - std::clamp(cy, pb.minY, pb.maxY);
+            if (dx * dx + dy * dy <= Config::COIN_RADIUS * Config::COIN_RADIUS) {
                 c.alive = false;
                 ev.emitSound(Sfx::Coin);
             }
