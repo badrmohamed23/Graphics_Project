@@ -154,6 +154,16 @@ void Projectile::draw(Renderer2D& r, float time) const {
     r.pushQuad(x + dir * 1.8f, shellY + 1.8f, 8.0f, 1.8f, Vec3(1.0f, 0.72f, 0.39f));
 }
 
+void RailgunImpact::draw(Renderer2D& r) const {
+    const float fade = remaining / DURATION;
+    const float reach = lerp(6.0f, 15.0f, 1.0f - fade);
+    const float core = 3.5f * fade;
+    const Vec3 cyan = Vec3(0.21f, 0.78f, 0.92f) * fade;
+    r.pushTriangle(x - reach, y + reach * 0.55f, x + core, y, x - core, y - core, cyan);
+    r.pushTriangle(x - reach, y - reach * 0.55f, x - core, y + core, x + core, y, cyan);
+    r.pushCircle(x, y, core, Vec3(0.83f, 1.0f, 1.0f) * fade, 8);
+}
+
 void PlayerEntity::drawMelee(Renderer2D& r, float yc, float j, float time) const {
     float xf = x;
     float legSwing = (evade == EvadeState::Jump) ? 0.0f : sinf(walkPhase * 12.0f) * 6.0f;

@@ -195,6 +195,12 @@ public:
     }
     void update(GameEngine& e, float dt, const InputState& in) override;
     void draw(GameEngine& e, Renderer2D& r) override;
+    void updateRailgunImpacts(float dt) {
+        for (RailgunImpact& impact : railgunImpacts) impact.remaining -= dt;
+        railgunImpacts.erase(std::remove_if(railgunImpacts.begin(), railgunImpacts.end(),
+            [](const RailgunImpact& impact) { return impact.remaining <= 0.0f; }), railgunImpacts.end());
+    }
+    bool hasRailgunImpacts() const { return !railgunImpacts.empty(); }
 
     GridSystem grid;
     WaveSpawner spawner;
@@ -206,6 +212,8 @@ public:
     int selectedCard = -1;
 
 private:
+    std::vector<RailgunImpact> railgunImpacts;
+
     bool hasActiveAttacker() const {
         return std::any_of(players.begin(), players.end(), [](const PlayerEntity* p) {
             return p->isActive() && p->kind != PlayerKind::Defense;
@@ -218,6 +226,7 @@ private:
         enemies.clear();
         projectiles.clear();
         coins.clear();
+        railgunImpacts.clear();
         grid.reset();
         spawner.reset();
         wallet.reset();
@@ -261,6 +270,7 @@ void GameplayState::update(GameEngine& e, float dt, const InputState& in) {
         e.switchTo(AppStateId::Pause);
         return;
     }
+    updateRailgunImpacts(dt);
     grid.updateHover(in.mouseX, in.mouseY);
 
     SimEvents ev;
@@ -323,6 +333,7 @@ void GameplayState::update(GameEngine& e, float dt, const InputState& in) {
     for (Projectile& proj : projectiles) proj.update(dt);
     for (Coin& c : coins) c.phase += dt * 4.0f;
     SpatialCollision::resolve(players, enemies, projectiles, coins, ev);
+    railgunImpacts.insert(railgunImpacts.end(), ev.railgunImpacts.begin(), ev.railgunImpacts.end());
 
     for (Coin& c : coins) {
         if (!c.alive) wallet.earn(c.value);
@@ -411,6 +422,7 @@ void GameplayState::draw(GameEngine& e, Renderer2D& r) {
     for (EnemyEntity* en : enemies) en->draw(r, t);
     for (PlayerEntity* p : players) if (p->alive) p->draw(r, t);
     drawCoins(r);
+    for (const RailgunImpact& impact : railgunImpacts) impact.draw(r);
     for (int lane = 0; lane < Config::LANE_COUNT; ++lane) {
         const float bottom = Config::laneBottomY(lane);
         drawHealthRow(r, players, lane, bottom - 8.0f, Vec3(0.24f, 0.91f, 0.63f));
@@ -452,17 +464,23 @@ public:
     explicit EndMenuState(bool win) : winMode(win) {}
     bool winMode = true;
     void update(GameEngine& e, float dt, const InputState& in) override {
-        (void)dt;
+        auto* game = static_cast<GameplayState*>(e.state(AppStateId::Gameplay));
+        if (winMode && game->hasRailgunImpacts()) {
+            game->updateRailgunImpacts(dt);
+            return;
+        }
         if (!in.clickPressed) return;
         if (BTN_RESTART.contains(in.mouseX, in.mouseY)) {
-            static_cast<GameplayState*>(e.state(AppStateId::Gameplay))->resetOnEnter = true;
+            game->resetOnEnter = true;
             e.switchTo(AppStateId::Gameplay);
         } else if (BTN_TOMAIN.contains(in.mouseX, in.mouseY)) {
             e.switchTo(AppStateId::MainMenu);
         }
     }
     void draw(GameEngine& e, Renderer2D& r) override {
-        e.state(AppStateId::Gameplay)->draw(e, r);
+        auto* game = static_cast<GameplayState*>(e.state(AppStateId::Gameplay));
+        game->draw(e, r);
+        if (winMode && game->hasRailgunImpacts()) return;
         r.pushQuad(Config::WORLD_W * 0.5f, Config::WORLD_H * 0.5f, Config::WORLD_W, Config::WORLD_H, Vec3(0.02f, 0.03f, 0.04f));
         if (winMode) {
             drawTitleBanner(r, "ALL WAVES CLEARED - YOU WIN!", 180.0f);
@@ -526,8 +544,8 @@ bool GameEngine::init() {
         return false;
     }
     {
-        const char* vs = (const char*)gl::glGetString(0x1F00);
-        const char* rs = (const char*)gl::glGetString(0x1F01);
+        const char* vs = (const char*)gl::glGetString(GL_VERSION);
+        const char* rs = (const char*)gl::glGetString(GL_RENDERER);
         printf("GL_VERSION: %s\n", vs ? vs : "?");
         printf("GL_RENDERER: %s\n", rs ? rs : "?");
         int verMajor = 0, verMinor = 0;
@@ -665,8 +683,6 @@ void GameEngine::run() {
 
         mActive->update(*this, dt, in);
 
-        mRenderer.setDamageTint(0.0f);
-        mRenderer.setGrayscale(0.0f);
         mRenderer.clearFrame(0.07f, 0.08f, 0.11f);
         mRenderer.beginFrame(mOrtho);
         mActive->draw(*this, mRenderer);

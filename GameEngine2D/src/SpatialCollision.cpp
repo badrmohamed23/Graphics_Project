@@ -83,6 +83,10 @@ void SpatialCollision::resolve(std::vector<PlayerEntity*>& players, std::vector<
                 hit->takeDamage(proj.damage);
                 proj.alive = false;
                 ev.emitSound(Sfx::Hit);
+                const AABB target = hit->box();
+                const float impactX = std::clamp(shot.maxX, target.minX, target.maxX);
+                const float impactY = std::clamp((shot.minY + shot.maxY) * 0.5f, target.minY, target.maxY);
+                ev.railgunImpacts.push_back({impactX, impactY});
             }
         }
     }

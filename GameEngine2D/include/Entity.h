@@ -13,9 +13,18 @@ enum class EnemyKind { Easy, Medium, Hard };
 enum class EvadeState { None, Jump };
 enum class Sfx { Attack, Hit, Coin, Death, Place, Wave, Win, Lose, None };
 
+struct RailgunImpact {
+    static constexpr float DURATION = 0.12f;
+    float x, y;
+    float remaining = DURATION;
+
+    void draw(Renderer2D& r) const;
+};
+
 struct SimEvents {
     struct PendingProjectile { float x; int lane; float dir; float yRel; float halfH; int damage; bool fromEnemy; };
     std::vector<PendingProjectile> projectiles;
+    std::vector<RailgunImpact> railgunImpacts;
     std::vector<Sfx> sounds;
     std::vector<std::pair<float, int>> coinDrops;
     void emitProjectile(float x, int lane, float dir, float yRel, float halfH, int damage, bool fromEnemy) {
@@ -23,7 +32,12 @@ struct SimEvents {
     }
     void emitSound(Sfx s) { if (s != Sfx::None) sounds.push_back(s); }
     void emitCoinDrop(float x, int value) { coinDrops.push_back({ x, value }); }
-    void clear() { projectiles.clear(); sounds.clear(); coinDrops.clear(); }
+    void clear() {
+        projectiles.clear();
+        railgunImpacts.clear();
+        sounds.clear();
+        coinDrops.clear();
+    }
 };
 
 struct Coin {
