@@ -58,16 +58,7 @@ struct Projectile {
         b.minY = yc + yRel - halfH; b.maxY = yc + yRel + halfH;
         return b;
     }
-    void draw(Renderer2D& r, float time) const {
-        float yc = Config::laneYCenter(lane);
-        Vec3 c;
-        if (!fromEnemy) c = Vec3(0.1f, 0.9f, 1.0f);
-        else if (yRel > 25.0f) c = Vec3(1.0f, 0.35f, 0.95f);
-        else c = Vec3(1.0f, 0.55f, 0.15f);
-        c = c * (0.8f + 0.2f * sinf(time * 20.0f));
-        r.pushQuad(x, yc + yRel, halfW * 2.4f, halfH * 0.8f, c);
-        r.pushQuad(x - dir * halfW * 1.4f, yc + yRel, halfW * 0.8f, halfH * 1.4f, c * 0.8f);
-    }
+    void draw(Renderer2D& r, float time) const;
 };
 
 inline Vec3 dmgColor(float tintFactor, const Vec3& base) {
@@ -124,6 +115,8 @@ public:
     EvadeState evade = EvadeState::None;
     bool duckHeld = false;
     float jumpT = 0.0f;
+    float shieldFlash = 0.0f;
+    float shieldImpactY = 0.0f;
 
     bool isActive() const { return alive && x < Config::WORLD_W; }
     float yOffset() const override {
@@ -147,6 +140,9 @@ public:
     static PlayerEntity* make(PlayerKind k, int lane);
 
 private:
+    float poseScale() const { return evade == EvadeState::None && duckHeld ? 0.72f : 1.0f; }
+    float walkBob() const { return evade == EvadeState::Jump ? 0.0f : fabsf(sinf(walkPhase * 12.0f)) * 3.0f; }
+    float rangedMuzzleY() const;
     void drawMelee(Renderer2D& r, float yc, float j, float time) const;
     void drawRanged(Renderer2D& r, float yc, float j, float time) const;
     void drawDefense(Renderer2D& r, float yc, float time) const;

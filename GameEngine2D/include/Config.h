@@ -48,8 +48,8 @@ constexpr float DUCK_TOP_OFFSET = 8.0f;
 
 constexpr float LOW_SHOT_CENTER_Y = -43.0f;
 constexpr float LOW_SHOT_HALF_H = 11.0f;
-constexpr float HIGH_PROJ_Y_MIN = 10.0f;
-constexpr float HIGH_PROJ_Y_MAX = 50.0f;
+constexpr float HIGH_SHOT_CENTER_Y = 30.0f;
+constexpr float HIGH_SHOT_HALF_H = 20.0f;
 
 constexpr int COST_MELEE = 10;
 constexpr int COST_RANGED = 20;

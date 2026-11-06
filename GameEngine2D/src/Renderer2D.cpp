@@ -106,11 +106,15 @@ void Renderer2D::pushQuadTL(float x, float y, float w, float h, const Vec3& colo
     pushVertex(x, y, color); pushVertex(x1, y1, color); pushVertex(x, y1, color);
 }
 
+void Renderer2D::pushTriangle(float ax, float ay, float bx, float by, float cx, float cy, const Vec3& color) {
+    pushVertex(ax, ay, color);
+    pushVertex(bx, by, color);
+    pushVertex(cx, cy, color);
+}
+
 void Renderer2D::pushTri(float cx, float cy, float w, float h, const Vec3& color) {
     float hw = w * 0.5f, hh = h * 0.5f;
-    pushVertex(cx - hw, cy - hh, color);
-    pushVertex(cx + hw, cy - hh, color);
-    pushVertex(cx, cy + hh, color);
+    pushTriangle(cx - hw, cy - hh, cx + hw, cy - hh, cx, cy + hh, color);
 }
 
 void Renderer2D::pushCircle(float cx, float cy, float radius, const Vec3& color, int segments) {

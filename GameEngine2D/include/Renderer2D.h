@@ -33,6 +33,7 @@ public:
 
     void pushQuad(float cx, float cy, float w, float h, const Vec3& color);
     void pushQuadTL(float x, float y, float w, float h, const Vec3& color);
+    void pushTriangle(float ax, float ay, float bx, float by, float cx, float cy, const Vec3& color);
     void pushTri(float cx, float cy, float w, float h, const Vec3& color);
     void pushCircle(float cx, float cy, float radius, const Vec3& color, int segments = 20);
     void pushRectOutline(float x, float y, float w, float h, float thickness, const Vec3& color);

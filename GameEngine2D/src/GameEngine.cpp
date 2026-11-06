@@ -152,8 +152,8 @@ public:
             shot.x = lerp(x1X - 32.0f, 110.0f, (t - 9.5f) / 2.5f);
             shot.lane = mGuardian->lane;
             shot.dir = -1.0f;
-            shot.yRel = 30.0f;
-            shot.halfH = 20.0f;
+            shot.yRel = Config::HIGH_SHOT_CENTER_Y;
+            shot.halfH = Config::HIGH_SHOT_HALF_H;
             shot.draw(r, t);
         }
         if (t >= 12.1f) {

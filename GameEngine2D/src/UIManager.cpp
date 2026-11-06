@@ -33,7 +33,9 @@ static void cardMiniModel(Renderer2D& r, float cx, float cy, PlayerKind k, bool 
         quad(cx - 4.5f, cy - 9.0f, 15.0f, 27.0f, Vec3(0.25f, 0.5f, 0.8f));
         quad(cx - 4.5f, cy + 12.0f, 10.5f, 10.5f, Vec3(0.16f, 0.33f, 0.55f));
         quad(cx + 3.0f, cy + 13.5f, 6.0f, 4.5f, Vec3(0.0f, 1.0f, 1.0f));
-        quad(cx + 6.0f, cy - 4.5f, 12.0f, 6.0f, Vec3(0.75f, 0.8f, 0.85f));
+        quad(cx + 8.0f, cy - 5.0f, 8.0f, 4.5f, Vec3(0.47f, 0.58f, 0.63f));
+        r.pushTriangle(cx + 9.0f, cy - 4.0f, cx + 15.0f, cy - 3.0f, cx + 18.0f, cy + 12.0f,
+                       greyIf(locked, Vec3(0.72f, 0.92f, 0.94f)));
         quad(cx - 13.5f, cy - 9.0f, 6.0f, 15.0f, Vec3(0.55f, 0.6f, 0.7f));
     } else if (k == PlayerKind::Ranged) {
         quad(cx - 4.5f, cy - 9.0f, 12.0f, 25.5f, Vec3(0.35f, 0.62f, 0.68f));

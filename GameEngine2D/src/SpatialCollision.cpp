@@ -63,6 +63,11 @@ void SpatialCollision::resolve(std::vector<PlayerEntity*>& players, std::vector<
                 if (shot.overlaps(p->box()) && inFront(p, hit)) hit = p;
             }
             if (hit) {
+                if (hit->kind == PlayerKind::Defense) {
+                    const AABB field = hit->box();
+                    hit->shieldImpactY = (std::max(shot.minY, field.minY) + std::min(shot.maxY, field.maxY)) * 0.5f;
+                    hit->shieldFlash = 1.0f;
+                }
                 hit->takeDamage(proj.damage);
                 proj.alive = false;
                 ev.emitSound(Sfx::Hit);
